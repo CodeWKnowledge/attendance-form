@@ -56,7 +56,7 @@ export default function AttendancePage() {
 
         <main className="mt-8 flex-1 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
           <p className="mb-6 text-slate-600">
-            Enter your details below. Your registration number is used to record your attendance.
+            Enter your details below to be included in the Mathematics and Statistics 2026 class list.
           </p>
           <AttendanceForm />
         </main>
