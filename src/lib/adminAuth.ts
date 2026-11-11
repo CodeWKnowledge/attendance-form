@@ -1,10 +1,23 @@
 import { supabase } from '@/lib/supabase';
 
 function friendlyAuthError(message: string): string {
-  if (message.includes('Invalid login credentials')) return 'Email or password is incorrect.';
-  if (message.includes('already registered')) return 'An account with this email already exists. Sign in instead.';
-  if (message.includes('Password should be at least')) return 'Password must be at least 8 characters.';
-  return 'Something went wrong. Please try again.';
+  const lower = message.toLowerCase();
+  if (lower.includes('invalid login credentials') || lower.includes('invalid grant')) {
+    return 'Email or password is incorrect. If you haven’t created your admin account yet, click "Create account" first.';
+  }
+  if (lower.includes('email not confirmed')) {
+    return 'Please check your email and confirm your address before signing in, or disable email confirmation in Supabase.';
+  }
+  if (lower.includes('already registered')) {
+    return 'An account with this email already exists. Sign in instead.';
+  }
+  if (lower.includes('password should be at least')) {
+    return 'Password must be at least 8 characters.';
+  }
+  if (lower.includes('user not found')) {
+    return 'No account found with this email. Click "Create account" to set up your password.';
+  }
+  return message || 'Something went wrong. Please try again.';
 }
 
 export async function signInAdmin(email: string, password: string): Promise<void> {

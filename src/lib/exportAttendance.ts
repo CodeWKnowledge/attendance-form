@@ -16,7 +16,7 @@ import {
 import type { AttendanceRecord } from '@/lib/attendance';
 import { formatDateTime } from '@/lib/formatDateTime';
 
-const TITLE = 'Department Attendance Register';
+const TITLE = 'Maths and Stats Department List 2026';
 const HEADERS = ['#', 'Full name', 'Phone number', 'Reg number', 'Signed in at'];
 const HEADER_FILL = '0F766E';
 

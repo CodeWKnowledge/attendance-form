@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { AlertCircle, Download, FileText, Loader2, LogOut, RefreshCw, Search, ShieldPlus, Users } from 'lucide-react';
-import AttendanceTable from '@/components/admin/AttendanceTable';
+import { AlertCircle, Download, FileText, Loader2, LogOut, RefreshCw, Search, ShieldPlus, Users, ArrowDownAZ, ArrowUpZA, Calendar } from 'lucide-react';
+import AttendanceTable, { type SortField, type SortOrder } from '@/components/admin/AttendanceTable';
 import ManageAdminsDialog from '@/components/admin/ManageAdminsDialog';
 import { fetchAttendance, type AttendanceRecord } from '@/lib/attendance';
 import { exportAttendanceDocx, exportAttendancePdf } from '@/lib/exportAttendance';
@@ -10,6 +10,7 @@ interface AttendanceDashboardProps {
 }
 
 type LoadState = 'loading' | 'ready' | 'error';
+type DateFilter = 'all' | 'today' | 'earlier';
 
 function isToday(iso: string): boolean {
   const date = new Date(iso);
@@ -25,6 +26,9 @@ export default function AttendanceDashboard({ onSignOut }: AttendanceDashboardPr
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [query, setQuery] = useState('');
+  const [sortField, setSortField] = useState<SortField>('created_at');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
+  const [dateFilter, setDateFilter] = useState<DateFilter>('all');
   const [exportError, setExportError] = useState<string | null>(null);
   const [exporting, setExporting] = useState<'pdf' | 'docx' | null>(null);
   const [showManageAdmins, setShowManageAdmins] = useState(false);
@@ -43,16 +47,53 @@ export default function AttendanceDashboard({ onSignOut }: AttendanceDashboardPr
     void loadRecords();
   }, [loadRecords]);
 
-  const filtered = useMemo(() => {
+  function handleSort(field: SortField) {
+    if (sortField === field) {
+      setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortField(field);
+      setSortOrder('asc');
+    }
+  }
+
+  const processedRecords = useMemo(() => {
+    let result = [...records];
+
+    // 1. Date filter
+    if (dateFilter === 'today') {
+      result = result.filter((r) => isToday(r.created_at));
+    } else if (dateFilter === 'earlier') {
+      result = result.filter((r) => !isToday(r.created_at));
+    }
+
+    // 2. Query search
     const term = query.trim().toLowerCase();
-    if (!term) return records;
-    return records.filter(
-      (record) =>
-        record.full_name.toLowerCase().includes(term) ||
-        record.phone_number.toLowerCase().includes(term) ||
-        record.reg_number.toLowerCase().includes(term),
-    );
-  }, [records, query]);
+    if (term) {
+      result = result.filter(
+        (record) =>
+          record.full_name.toLowerCase().includes(term) ||
+          record.phone_number.toLowerCase().includes(term) ||
+          record.reg_number.toLowerCase().includes(term),
+      );
+    }
+
+    // 3. Sorting
+    result.sort((a, b) => {
+      let comparison = 0;
+      if (sortField === 'created_at') {
+        comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      } else if (sortField === 'full_name') {
+        comparison = a.full_name.localeCompare(b.full_name, undefined, { sensitivity: 'base' });
+      } else if (sortField === 'reg_number') {
+        comparison = a.reg_number.localeCompare(b.reg_number, undefined, { numeric: true });
+      } else if (sortField === 'phone_number') {
+        comparison = a.phone_number.localeCompare(b.phone_number);
+      }
+      return sortOrder === 'asc' ? comparison : -comparison;
+    });
+
+    return result;
+  }, [records, query, dateFilter, sortField, sortOrder]);
 
   const todayCount = useMemo(() => records.filter((record) => isToday(record.created_at)).length, [records]);
 
@@ -61,9 +102,9 @@ export default function AttendanceDashboard({ onSignOut }: AttendanceDashboardPr
     setExporting(format);
     try {
       if (format === 'pdf') {
-        exportAttendancePdf(filtered);
+        exportAttendancePdf(processedRecords);
       } else {
-        await exportAttendanceDocx(filtered);
+        await exportAttendanceDocx(processedRecords);
       }
     } catch {
       setExportError('The file could not be created. Please try again.');
@@ -72,14 +113,18 @@ export default function AttendanceDashboard({ onSignOut }: AttendanceDashboardPr
     }
   }
 
-  const canExport = loadState === 'ready' && filtered.length > 0 && exporting === null;
+  const canExport = loadState === 'ready' && processedRecords.length > 0 && exporting === null;
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-xl font-semibold text-slate-900">Attendance records</h2>
-          <p className="text-sm text-slate-600">Everyone who has signed in, newest first.</p>
+          <p className="text-sm text-slate-600">
+            {sortField === 'created_at' && sortOrder === 'asc'
+              ? 'Ordered by registration sequence (#1 is first registered).'
+              : `Sorted by ${sortField.replace('_', ' ')} (${sortOrder === 'asc' ? 'ascending' : 'descending'}).`}
+          </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <button
@@ -110,23 +155,67 @@ export default function AttendanceDashboard({ onSignOut }: AttendanceDashboardPr
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <StatCard icon={<Users className="h-5 w-5 text-teal-700" aria-hidden="true" />} label="Total sign-ins" value={records.length} />
-        <StatCard icon={<Users className="h-5 w-5 text-sky-700" aria-hidden="true" />} label="Signed in today" value={todayCount} />
+        <StatCard icon={<Users className="h-5 w-5 text-teal-700" aria-hidden="true" />} label="Total registrations" value={records.length} />
+        <StatCard icon={<Users className="h-5 w-5 text-sky-700" aria-hidden="true" />} label="Registered today" value={todayCount} />
       </div>
 
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div className="relative w-full md:max-w-sm">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
-          <input
-            type="search"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search name, phone or reg number"
-            aria-label="Search attendance records"
-            className="block w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-10 pr-4 text-sm text-slate-900 placeholder:text-slate-400 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-100"
-          />
+      {/* Filter and Sort Toolbar */}
+      <div className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:flex-row md:items-center md:justify-between">
+        <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="relative w-full sm:max-w-xs">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
+            <input
+              type="search"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search name, phone or reg number"
+              aria-label="Search attendance records"
+              className="block w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-4 text-sm text-slate-900 placeholder:text-slate-400 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-100"
+            />
+          </div>
+
+          {/* Quick Date Filter */}
+          <div className="flex items-center gap-1.5 text-xs">
+            <span className="font-medium text-slate-500">Filter:</span>
+            {(['all', 'today', 'earlier'] as const).map((filter) => (
+              <button
+                key={filter}
+                type="button"
+                onClick={() => setDateFilter(filter)}
+                className={`rounded-md px-2.5 py-1.5 font-medium transition ${
+                  dateFilter === filter
+                    ? 'bg-teal-700 text-white'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
+              >
+                {filter === 'all' ? 'All dates' : filter === 'today' ? 'Today only' : 'Before today'}
+              </button>
+            ))}
+          </div>
+
+          {/* Sort By Selector */}
+          <div className="flex items-center gap-1.5 text-xs">
+            <span className="font-medium text-slate-500">Sort:</span>
+            <select
+              value={`${sortField}-${sortOrder}`}
+              onChange={(e) => {
+                const [f, o] = e.target.value.split('-') as [SortField, SortOrder];
+                setSortField(f);
+                setSortOrder(o);
+              }}
+              className="rounded-md border border-slate-300 bg-white px-2 py-1.5 text-xs font-medium text-slate-700 focus:border-teal-600 focus:outline-none"
+            >
+              <option value="created_at-asc">Registration Order (#1 First Registered)</option>
+              <option value="created_at-desc">Latest Registered First</option>
+              <option value="full_name-asc">Name (A → Z)</option>
+              <option value="full_name-desc">Name (Z → A)</option>
+              <option value="reg_number-asc">Reg Number (Ascending)</option>
+              <option value="reg_number-desc">Reg Number (Descending)</option>
+            </select>
+          </div>
         </div>
-        <div className="flex flex-wrap gap-2">
+
+        <div className="flex flex-wrap items-center gap-2">
           <ExportButton
             label="Download PDF"
             icon={<Download className="h-4 w-4" aria-hidden="true" />}
@@ -173,17 +262,24 @@ export default function AttendanceDashboard({ onSignOut }: AttendanceDashboardPr
 
       {loadState === 'ready' && records.length === 0 && (
         <div className="rounded-xl border border-dashed border-slate-300 bg-white py-16 text-center text-slate-600">
-          No one has signed in yet.
+          No one has registered yet.
         </div>
       )}
 
-      {loadState === 'ready' && records.length > 0 && filtered.length === 0 && (
+      {loadState === 'ready' && records.length > 0 && processedRecords.length === 0 && (
         <div className="rounded-xl border border-dashed border-slate-300 bg-white py-12 text-center text-slate-600">
-          No records match your search.
+          No records match your filter criteria.
         </div>
       )}
 
-      {loadState === 'ready' && filtered.length > 0 && <AttendanceTable records={filtered} />}
+      {loadState === 'ready' && processedRecords.length > 0 && (
+        <AttendanceTable
+          records={processedRecords}
+          sortField={sortField}
+          sortOrder={sortOrder}
+          onSort={handleSort}
+        />
+      )}
 
       {showManageAdmins && <ManageAdminsDialog onClose={() => setShowManageAdmins(false)} />}
     </div>

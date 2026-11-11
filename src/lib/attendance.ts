@@ -57,7 +57,7 @@ export async function fetchAttendance(): Promise<AttendanceRecord[]> {
   const { data, error } = await supabase
     .from('attendance')
     .select('id, full_name, phone_number, reg_number, created_at')
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: true });
   if (error || !Array.isArray(data)) {
     throw new Error('Could not load attendance records.');
   }
