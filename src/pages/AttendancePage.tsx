@@ -49,8 +49,8 @@ export default function AttendancePage() {
             <ClipboardCheck className="h-6 w-6 text-white" aria-hidden="true" />
           </div>
           <div>
-            <p className="text-sm font-medium text-teal-700">Department Attendance</p>
-            <h1 className="text-2xl font-semibold text-slate-900">Sign in for today</h1>
+            <p className="text-sm font-medium text-teal-700">Maths and Stats Department List 2026</p>
+            <h1 className="text-2xl font-semibold text-slate-900">Register your details</h1>
           </div>
         </header>
 
@@ -62,7 +62,7 @@ export default function AttendancePage() {
         </main>
 
         <footer className="mt-8 text-center text-xs text-slate-400 select-none">
-          © {new Date().getFullYear()} Department Attendance System
+          © {new Date().getFullYear()} Maths and Stats Shenanigans
         </footer>
       </div>
     </div>

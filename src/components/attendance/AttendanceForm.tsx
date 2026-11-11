@@ -73,7 +73,7 @@ export default function AttendanceForm() {
         value={form.fullName}
         onChange={(value) => updateField('fullName', value)}
         autoComplete="name"
-        placeholder="e.g. Ada Okafor"
+        placeholder="e.g. Franklyn Okpara"
       />
       <Field
         id="phoneNumber"
@@ -94,8 +94,7 @@ export default function AttendanceForm() {
         onChange={(value) => updateField('regNumber', value)}
         autoCapitalize="characters"
         spellCheck={false}
-        placeholder="e.g. 202660623441GA"
-        hint="12 digits followed by 2 letters"
+        placeholder="e.g. 202612345678AB"
       />
 
       {submitError && (
@@ -117,7 +116,7 @@ export default function AttendanceForm() {
         ) : (
           <>
             <Send className="h-4 w-4" aria-hidden="true" />
-            Mark my attendance
+            Register my details
           </>
         )}
       </button>
