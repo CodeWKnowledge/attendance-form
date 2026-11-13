@@ -2,6 +2,7 @@ export interface AttendanceInput {
   fullName: string;
   phoneNumber: string;
   regNumber: string;
+  dateOfBirth: string;
 }
 
 export type AttendanceErrors = Partial<Record<keyof AttendanceInput, string>>;
@@ -13,6 +14,7 @@ export function normalizeAttendanceInput(input: AttendanceInput): AttendanceInpu
     fullName: input.fullName.trim().replace(/\s+/g, ' '),
     phoneNumber: input.phoneNumber.trim(),
     regNumber: input.regNumber.replace(/\s+/g, '').toUpperCase(),
+    dateOfBirth: input.dateOfBirth.trim(),
   };
 }
 
@@ -32,7 +34,19 @@ export function validateAttendanceInput(input: AttendanceInput): AttendanceError
   }
 
   if (!REG_NUMBER_PATTERN.test(normalized.regNumber)) {
-    errors.regNumber = 'Use 12 digits followed by 2 letters, for example 202660623441GA.';
+    errors.regNumber = 'Use 12 digits followed by 2 letters, for example 202612345678AB.';
+  }
+
+  if (!normalized.dateOfBirth) {
+    errors.dateOfBirth = 'Please enter your date of birth.';
+  } else {
+    const dob = new Date(normalized.dateOfBirth);
+    const today = new Date();
+    if (isNaN(dob.getTime())) {
+      errors.dateOfBirth = 'Please enter a valid date.';
+    } else if (dob > today) {
+      errors.dateOfBirth = 'Date of birth cannot be in the future.';
+    }
   }
 
   return errors;

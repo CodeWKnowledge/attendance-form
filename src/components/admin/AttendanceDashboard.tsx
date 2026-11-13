@@ -88,6 +88,8 @@ export default function AttendanceDashboard({ onSignOut }: AttendanceDashboardPr
         comparison = a.reg_number.localeCompare(b.reg_number, undefined, { numeric: true });
       } else if (sortField === 'phone_number') {
         comparison = a.phone_number.localeCompare(b.phone_number);
+      } else if (sortField === 'date_of_birth') {
+        comparison = (a.date_of_birth || '').localeCompare(b.date_of_birth || '');
       }
       return sortOrder === 'asc' ? comparison : -comparison;
     });
@@ -211,6 +213,8 @@ export default function AttendanceDashboard({ onSignOut }: AttendanceDashboardPr
               <option value="full_name-desc">Name (Z → A)</option>
               <option value="reg_number-asc">Reg Number (Ascending)</option>
               <option value="reg_number-desc">Reg Number (Descending)</option>
+              <option value="date_of_birth-asc">Date of Birth (Oldest First)</option>
+              <option value="date_of_birth-desc">Date of Birth (Youngest First)</option>
             </select>
           </div>
         </div>

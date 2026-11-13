@@ -2,7 +2,7 @@ import type { AttendanceRecord } from '@/lib/attendance';
 import { formatDateTime } from '@/lib/formatDateTime';
 import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 
-export type SortField = 'created_at' | 'full_name' | 'reg_number' | 'phone_number';
+export type SortField = 'created_at' | 'full_name' | 'reg_number' | 'phone_number' | 'date_of_birth';
 export type SortOrder = 'asc' | 'desc';
 
 interface AttendanceTableProps {
@@ -53,6 +53,12 @@ export default function AttendanceTable({
                 {renderSortIcon('reg_number')}
               </div>
             </th>
+            <th scope="col" className="px-4 py-3 cursor-pointer select-none hover:bg-slate-100 transition" onClick={() => onSort('date_of_birth')}>
+              <div className="flex items-center">
+                Date of birth
+                {renderSortIcon('date_of_birth')}
+              </div>
+            </th>
             <th scope="col" className="px-4 py-3 cursor-pointer select-none hover:bg-slate-100 transition" onClick={() => onSort('created_at')}>
               <div className="flex items-center">
                 Signed in at
@@ -68,6 +74,7 @@ export default function AttendanceTable({
               <td className="px-4 py-3 font-medium text-slate-900">{record.full_name}</td>
               <td className="px-4 py-3 text-slate-700">{record.phone_number}</td>
               <td className="px-4 py-3 font-mono text-slate-700">{record.reg_number}</td>
+              <td className="px-4 py-3 text-slate-700">{record.date_of_birth || '—'}</td>
               <td className="px-4 py-3 text-slate-700">{formatDateTime(record.created_at)}</td>
             </tr>
           ))}

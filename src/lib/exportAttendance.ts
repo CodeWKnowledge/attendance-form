@@ -16,8 +16,8 @@ import {
 import type { AttendanceRecord } from '@/lib/attendance';
 import { formatDateTime } from '@/lib/formatDateTime';
 
-const TITLE = 'Maths and Stats Department List 2026';
-const HEADERS = ['#', 'Full name', 'Phone number', 'Reg number', 'Signed in at'];
+const TITLE = 'Department of Maths & Stats 100 Level Class List';
+const HEADERS = ['#', 'Full name', 'Phone number', 'Reg number', 'Date of birth', 'Signed in at'];
 const HEADER_FILL = '0F766E';
 
 function toRows(records: AttendanceRecord[]): string[][] {
@@ -26,6 +26,7 @@ function toRows(records: AttendanceRecord[]): string[][] {
     record.full_name,
     record.phone_number,
     record.reg_number,
+    record.date_of_birth || '—',
     formatDateTime(record.created_at),
   ]);
 }

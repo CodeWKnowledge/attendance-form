@@ -7,7 +7,7 @@ import {
   type AttendanceInput,
 } from '@/lib/attendanceValidation';
 
-const EMPTY_FORM: AttendanceInput = { fullName: '', phoneNumber: '', regNumber: '' };
+const EMPTY_FORM: AttendanceInput = { fullName: '', phoneNumber: '', regNumber: '', dateOfBirth: '' };
 
 type SubmitStatus = 'idle' | 'submitting' | 'success';
 
@@ -95,6 +95,14 @@ export default function AttendanceForm() {
         autoCapitalize="characters"
         spellCheck={false}
         placeholder="e.g. 202612345678AB"
+      />
+      <Field
+        id="dateOfBirth"
+        label="Date of birth"
+        type="date"
+        error={errors.dateOfBirth}
+        value={form.dateOfBirth}
+        onChange={(value) => updateField('dateOfBirth', value)}
       />
 
       {submitError && (

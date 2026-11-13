@@ -6,6 +6,7 @@ export interface AttendanceRecord {
   full_name: string;
   phone_number: string;
   reg_number: string;
+  date_of_birth?: string | null;
   created_at: string;
 }
 
@@ -36,6 +37,7 @@ export async function submitAttendance(input: AttendanceInput): Promise<void> {
     full_name: normalized.fullName,
     phone_number: normalized.phoneNumber,
     reg_number: normalized.regNumber,
+    date_of_birth: normalized.dateOfBirth || null,
   });
 
   if (error) {
@@ -56,7 +58,7 @@ export async function submitAttendance(input: AttendanceInput): Promise<void> {
 export async function fetchAttendance(): Promise<AttendanceRecord[]> {
   const { data, error } = await supabase
     .from('attendance')
-    .select('id, full_name, phone_number, reg_number, created_at')
+    .select('id, full_name, phone_number, reg_number, date_of_birth, created_at')
     .order('created_at', { ascending: true });
   if (error || !Array.isArray(data)) {
     throw new Error('Could not load attendance records.');
